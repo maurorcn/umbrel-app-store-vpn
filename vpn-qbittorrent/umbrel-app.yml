@@ -1,0 +1,38 @@
+manifestVersion: 1
+id: vpn-qbittorrent
+storage:
+  dataRoot: data
+category: networking
+name: qBittorrent (VPN)
+version: "1.0.0"
+icon: https://cdn.jsdelivr.net/gh/selfhst/icons/png/qbittorrent.png
+tagline: qBittorrent protegido por Gluetun com kill switch
+description: >-
+  qBittorrent a correr dentro da rede do Gluetun. Todo o tráfego do cliente
+  passa obrigatoriamente pela VPN e, se o túnel cair, o firewall do Gluetun
+  bloqueia tudo (kill switch), por isso o teu IP real nunca é exposto.
+
+
+  ⚠️ ANTES DE INSTALAR: cria o ficheiro com as credenciais da VPN em
+  ~/umbrel/app-data/vpn-qbittorrent/gluetun.env (ver README da store).
+
+
+  Utilizador: admin. A password temporária aparece nos logs do contentor
+  qbittorrent na primeira execução.
+developer: qBittorrent + Gluetun
+website: https://www.qbittorrent.org/
+dependencies: []
+repo: https://github.com/CHANGE-ME/umbrel-vpn-store
+support: https://github.com/CHANGE-ME/umbrel-vpn-store/issues
+port: 8080
+gallery: []
+path: ""
+defaultUsername: "admin"
+defaultPassword: ""
+torOnly: false
+releaseNotes: >-
+  Primeira versão: qBittorrent atrás do Gluetun com kill switch.
+permissions:
+  - STORAGE_DOWNLOADS
+submitter: Eu
+submission: https://github.com/CHANGE-ME/umbrel-vpn-store

@@ -1,0 +1,62 @@
+services:
+  app_proxy:
+    environment:
+      # O WebUI é servido pela stack de rede do gluetun (network_mode: service:gluetun)
+      APP_HOST: vpn-transmission_gluetun_1
+      APP_PORT: 9091
+
+  gluetun:
+    image: qmcgaw/gluetun:latest   # TODO: fixar tag@sha256 como nas apps oficiais
+    restart: on-failure
+    stop_grace_period: 1m
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    # Credenciais da VPN (ficheiro teu, fora do repo) — ver examples/gluetun.env.example
+    env_file:
+      - path: ${APP_DATA_DIR}/gluetun.env
+        required: false
+    environment:
+      TZ: Europe/Lisbon
+      # ---- KILL SWITCH ----
+      # Firewall sempre ativo: bloqueia tudo o que não sair pelo túnel.
+      FIREWALL: "on"
+      # Porta do WebUI (app_proxy + widget-server acedem por aqui)
+      FIREWALL_INPUT_PORTS: "9091"
+      # Rede docker do Umbrel + LAN (apenas redes locais; nunca Internet)
+      FIREWALL_OUTBOUND_SUBNETS: "10.21.0.0/16,192.168.0.0/16"
+      DOT: "on"
+      HEALTH_TARGET_ADDRESS: "1.1.1.1:443"
+      # Porta de peers: NÃO se publica 51413 no host (seria inútil/vazaria fora da VPN).
+      # Se o fornecedor der port forwarding, usa VPN_PORT_FORWARDING=on no gluetun.env
+      # ou uma porta fixa: FIREWALL_VPN_INPUT_PORTS=<porta>
+    volumes:
+      - ${APP_DATA_DIR}/data/gluetun:/gluetun
+
+  server:
+    image: linuxserver/transmission:4.1.3@sha256:30d59b253993df8c7634fe03cbb33e22324d00d200ff3d3cc30e6184fa55f96b
+    # KILL SWITCH #2: sem rede própria; usa só a do gluetun.
+    # (por isso não há "ports:" aqui — não são permitidos com network_mode)
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Lisbon
+    volumes:
+      - ${APP_DATA_DIR}/data/config:/config
+      - ${UMBREL_ROOT}/data/storage/downloads:/downloads
+    restart: on-failure
+
+  widget-server:
+    image: getumbrel/umbrel-transmission-widget-server:v1.0.0@sha256:0ee30f1eecbf6f4f3f62e3f6d5c1626bd31d15ace7e97cacff5fc091836650cf
+    environment:
+      # O Transmission vive agora dentro do contentor gluetun
+      - TRANSMISSION_URL=http://vpn-transmission_gluetun_1
+      - TRANSMISSION_PORT=9091
+    depends_on:
+      - gluetun
+    restart: on-failure
