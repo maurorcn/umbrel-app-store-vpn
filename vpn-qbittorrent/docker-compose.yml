@@ -26,10 +26,12 @@ services:
       FIREWALL: "on"
       FIREWALL_INPUT_PORTS: "8080"
       # rede docker do Umbrel (app_proxy) + LAN doméstica (apenas rede local, não Internet)
-      FIREWALL_OUTBOUND_SUBNETS: "10.21.0.0/16,192.168.0.0/16"
+      FIREWALL_OUTBOUND_SUBNETS: "192.168.1.0/24,10.21.0.0/16"
       # DNS sobre TLS dentro do túnel
       DOT: "on"
       HEALTH_TARGET_ADDRESS: "1.1.1.1:443"
+    ports:
+      - "8080:8080"
     volumes:
       - ${APP_DATA_DIR}/data/gluetun:/gluetun
     # Nota: o gluetun tem healthcheck interno; o qbittorrent só arranca quando estiver "healthy"
